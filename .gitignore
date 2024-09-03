@@ -1,0 +1,19 @@
+# Django #
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+staticfiles/
+.env
+
+# VS Code #
+.vscode/
+
+# IDEs #
+.idea/
+.pytest_cache/
+
+# Ignore the universal_sentence_encoder folder
+load_from/

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Python IDE</title>
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <!-- Toastr CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
+    />
+    <!-- Ace Editor CSS -->
+    <style>
+      .ace_editor {
+        border: 1px solid #444;
+        border-radius: 10px;
+        font-size: 16px;
+        height: auto; /* Adjust based on needs */
+        min-height: 350px; /* Minimum height */
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        font-weight: bold;
+      }
+
+      body {
+        font-family: "Courier New", Courier, monospace;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        position: relative;
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #2d2d2d;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .container {
+        position: relative;
+        max-width: 900px;
+        margin: 20px auto;
+        padding: 20px;
+        background: #2d2d2d;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+      }
+
+      .theme-button {
+        position: absolute;
+        top: 45px;
+        right: 25px;
+        background-color: #007acc; /* Clear and visible color */
+        color: #fff;
+        border: 1px solid #005a9e;
+        padding: 6px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        z-index: 10;
+      }
+
+      .theme-button:hover {
+        background-color: #005a9e; /* Darker shade on hover */
+        border-color: #004080;
+      }
+
+      .theme-button:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #569cd6;
+      }
+
+      .form-group {
+        position: relative;
+        margin-bottom: 15px;
+      }
+
+      .form-group h2 {
+        margin-bottom: 5px;
+        color: #569cd6;
+        text-align: center;
+      }
+
+      textarea {
+        width: 97%;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 10px;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        resize: vertical;
+        font-size: 16px;
+        margin: 0 auto;
+        display: block;
+        position: relative;
+        font-weight: bold;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .upload-button {
+        display: inline-block;
+        background-color: #3c3c3c;
+        color: #d4d4d4;
+        border: 1px solid #444;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        text-align: center;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        white-space: nowrap; /* Prevent text wrapping */
+        position: relative; /* Needed for tooltip positioning */
+      }
+
+      .upload-button:hover {
+        background-color: #4e4e4e;
+        border-color: #555;
+      }
+
+      .form-group input[type="text"] {
+        flex: 1;
+        width: 15%;
+        text-align: center;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #3c3c3c;
+        color: #d4d4d4;
+        font-size: 14px;
+        box-sizing: border-box; /* Ensure padding is included in the width */
+      }
+
+      .button-group {
+        text-align: center;
+        margin-top: 10px;
+      }
+
+      .button-group button {
+        background-color: #3c3c3c;
+        color: #d4d4d4;
+        border: 1px solid #444;
+        padding: 5px 20px;
+        margin: 0 5px;
+        border-radius: 4px;
+        font-size: 16px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        position: relative; /* Needed for tooltip positioning */
+      }
+
+      .button-group button:hover {
+        background-color: #4e4e4e;
+        border-color: #555;
+      }
+
+      .button-group .run-button:hover {
+        background-color: #28a745; /* Green color for active state */
+        border-color: #1e7e34; /* Darker green border for better visual appearance */
+      }
+
+      .result {
+        margin-top: 20px;
+        text-align: center;
+      }
+
+      .result h2 {
+        margin-bottom: 5px;
+        color: #569cd6;
+      }
+
+      #result-output {
+        height: 150px;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border: 1px solid #444;
+        margin: 0 auto;
+        display: block;
+      }
+
+      .spinner {
+        position: absolute;
+        top: 50%;
+        left: 47%;
+        transform: translate(-50%, -50%);
+        border: 4px solid rgba(0, 0, 0, 0.1);
+        border-radius: 50%;
+        border-top: 4px solid #007acc;
+        width: 40px;
+        height: 40px;
+        animation: spin 1s linear infinite;
+        display: none; /* Hidden by default */
+        z-index: 1000; /* Ensure spinner is on top of other elements */
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Modal Styles */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed;
+        z-index: 1000; /* On top of other content */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(
+          0,
+          0,
+          0,
+          0.5
+        ); /* Black background with transparency */
+      }
+
+      .modal-content {
+        background-color: #2d2d2d;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 10px;
+        width: 80%;
+        max-width: 500px;
+      }
+
+      .close-button {
+        color: #d4d4d4;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close-button:hover,
+      .close-button:focus {
+        color: #ffffff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .modal-content h2 {
+        color: #569cd6;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+
+      #modal-file-name {
+        width: 97%;
+        padding: 10px;
+        border: 1px solid #444;
+        border-radius: 4px;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      #confirm-download {
+        background-color: #3c3c3c;
+        color: #d4d4d4;
+        border: 1px solid #444;
+        padding: 5px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+        display: block;
+        margin: 0 auto;
+      }
+
+      #confirm-download:hover {
+        background-color: #4e4e4e;
+        border-color: #555;
+      }
+
+      .tooltip {
+        position: absolute;
+        background-color: #222;
+        color: #ffeb3b;
+        padding: 10px;
+        border-radius: 6px;
+        font-size: 14px;
+        white-space: nowrap;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        width: max-content;
+        max-width: 250px;
+        text-align: center;
+        pointer-events: none; /* Ensure tooltip does not interfere with mouse events */
+      }
+
+      .button-group button:hover .tooltip,
+      .upload-button:hover .tooltip {
+        opacity: 1;
+        top: -50px;
+      }
+
+      .upload-button .tooltip,
+      .button-group button .tooltip {
+        top: -50px; /* Position the tooltip below the button */
+      }
+    </style>
+    <!-- Ace Editor JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ace.js"></script>
+    <!-- Include Ace extensions for auto-completion -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/ext-language_tools.js"></script>
+    <!-- jQuery (required for Toastr) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Theme Toggle Button -->
+      <button id="theme-button" class="theme-button">
+        <i class="fas fa-moon"></i>
+        <span class="tooltip">Switch theme</span>
+      </button>
+      <h1>Simple Python IDE</h1>
+      <form id="main-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group">
+          <label for="id_code_file">Upload Code File</label>
+          <label for="id_code_file" class="upload-button">
+            Choose File
+            <span class="tooltip">Choose a python file to upload</span>
+          </label>
+          <input type="file" name="code_file" id="id_code_file" />
+        </div>
+        <div class="form-group">
+          <h2>Code Input</h2>
+          <div id="editor"></div>
+          <!-- Spinner overlay -->
+          <div id="spinner" class="spinner"></div>
+        </div>
+        <div class="button-group">
+          <button type="button" id="run-button" class="run-button">
+            <i class="fa fa-play"></i><strong> Run</strong>
+            <span class="tooltip">Run the code</span>
+          </button>
+          <button type="button" id="copy-button" class="copy-button">
+            <i class="fas fa-copy"></i>
+            <span class="tooltip">Copy the code to clipboard</span>
+          </button>
+          <button type="button" id="download-button" class="download-button">
+            <i class="fas fa-download"></i>
+            <span class="tooltip">Download the code as a file</span>
+          </button>
+        </div>
+        <div class="result">
+          <h2>Result</h2>
+          <textarea id="result-output" readonly></textarea>
+          <div class="button-group">
+            <button type="button" id="copy-result-button">
+              <i class="fas fa-copy"></i>
+              <span class="tooltip">Copy the result to clipboard</span>
+            </button>
+            <button type="button" id="download-result-button">
+              <i class="fas fa-download"></i>
+              <span class="tooltip">Download the result as a text file</span>
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- Modal for File Name Input -->
+    <div id="file-name-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Enter File Name</h2>
+        <input
+          type="text"
+          id="modal-file-name"
+          placeholder="Enter file name..."
+        />
+        <button id="confirm-download">Download</button>
+      </div>
+    </div>
+
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1)
+                );
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+
+        // Initialize Toastr with position options
+        toastr.options = {
+          closeButton: true,
+          debug: false,
+          newestOnTop: false,
+          progressBar: true,
+          positionClass: "toast-bottom-right", // Set position to bottom right
+          preventDuplicates: false,
+          onclick: null,
+          showDuration: "300",
+          hideDuration: "1000",
+          timeOut: "4000",
+          extendedTimeOut: "1000",
+          showEasing: "swing",
+          hideEasing: "linear",
+          showMethod: "fadeIn",
+          hideMethod: "fadeOut",
+        };
+
+        const csrftoken = getCookie("csrftoken");
+        const modal = $("#file-name-modal");
+        const closeButton = $(".close-button");
+        const confirmDownloadButton = $("#confirm-download");
+
+        // Initialize Ace Editor
+        const editor = ace.edit("editor");
+        let currentTheme = "ace/theme/monokai"; // Default theme
+        editor.session.setMode("ace/mode/python");
+        editor.setTheme(currentTheme);
+        editor.setOptions({
+          enableBasicAutocompletion: true,
+          enableLiveAutocompletion: true,
+        });
+        // Placeholder functionality
+        const placeholderText = "# Type your Python code here...";
+        editor.setValue(placeholderText, -1);
+
+        // Set cursor to the end of placeholder text
+        editor.moveCursorTo(0, placeholderText.length);
+
+        // Clear placeholder on user input
+        function clearPlaceholder() {
+          if (editor.getValue() === placeholderText) {
+            editor.setValue("");
+          }
+        }
+
+        editor.on("change", clearPlaceholder);
+        editor.on("focus", clearPlaceholder);
+
+        // Handle file upload
+        $("#id_code_file").on("change", function (event) {
+          const file = this.files[0];
+
+          // Check if the file is a .py file
+          if (!file.name.endsWith(".py")) {
+            toastr.error("Only .py files are allowed", "Invalid File Type");
+            this.value = ""; // Clear the input
+            return;
+          }
+
+          const reader = new FileReader();
+
+          reader.onload = function (e) {
+            editor.setValue(e.target.result, -1);
+            // Move cursor to the end of the content
+            const lastRow = editor.session.getLength() - 1;
+            const lastColumn = editor.session.getLine(lastRow).length;
+            editor.gotoLine(lastRow + 1, lastColumn);
+            editor.focus();
+          };
+
+          reader.readAsText(file);
+        });
+
+        $(document).on("keydown", function (event) {
+          if (event.altKey && event.key === "Enter") {
+            event.preventDefault(); // Prevent default behavior
+            const code = editor.getValue();
+            // Check if the editor is empty
+            if (code.trim() === "") {
+              toastr.error(
+                "The editor is empty. Please provide a description for code suggestion"
+              );
+              return;
+            }
+
+            $("#spinner").show(); // Show the spinner
+
+            $.ajax({
+              url: "{% url 'get_code_suggestion' %}",
+              type: "POST",
+              headers: {
+                "X-CSRFToken": csrftoken,
+              },
+              data: {
+                code_input: code,
+                csrfmiddlewaretoken: csrftoken,
+              },
+              success: function (response) {
+                if (response.suggested_code) {
+                  editor.setValue(response.suggested_code, -1);
+                  // Move cursor to the end of the content
+                  const lastRow = editor.session.getLength() - 1;
+                  const lastColumn = editor.session.getLine(lastRow).length;
+                  editor.gotoLine(lastRow + 1, lastColumn);
+                  editor.focus();
+                } else if (response.error) {
+                  alert("Error: " + response.error);
+                } else {
+                  alert("No suggestion received.");
+                }
+              },
+              error: function (xhr) {
+                alert("An error occurred: " + xhr.responseText);
+              },
+              complete: function () {
+                // Hide the spinner
+                $("#spinner").hide();
+              },
+            });
+          }
+        });
+
+        // Theme toggle button event
+        $("#theme-button").on("click", function () {
+          if (currentTheme === "ace/theme/monokai") {
+            currentTheme = "ace/theme/solarized_light"; // Switch to light theme
+            // Update colors for light theme
+            $("#editor").css({
+              "background-color": "#c0c0c0",
+              color: "#1e1e1e",
+            });
+            $("#result-output").css({
+              "background-color": "#ffffff",
+              color: "#1e1e1e",
+            });
+            $("#theme-button i").removeClass("fa-moon").addClass("fa-sun");
+          } else {
+            currentTheme = "ace/theme/monokai"; // Switch to dark theme
+            // Update colors for dark theme
+            $("#editor").css({
+              "background-color": "#1e1e1e",
+              color: "#d4d4d4",
+            });
+            $("#result-output").css({
+              "background-color": "#1e1e1e",
+              color: "#d4d4d4",
+            });
+            $("#theme-button i").removeClass("fa-sun").addClass("fa-moon");
+          }
+          editor.setTheme(currentTheme);
+        });
+
+        $("#run-button").on("click", function () {
+          $(this).addClass("active"); // Change button color to green
+          $.ajax({
+            url: "{% url 'run_code' %}",
+            type: "POST",
+            headers: {
+              "X-CSRFToken": csrftoken,
+            },
+            data: {
+              code_input: editor.getValue(),
+              csrfmiddlewaretoken: csrftoken,
+            },
+            success: function (response) {
+              $("#result-output").val(response.result);
+            },
+            error: function (xhr) {
+              alert("An error occurred: " + xhr.responseText);
+            },
+            complete: function () {
+              // Remove 'active' class when AJAX request completes
+              $("#run-button").removeClass("active");
+            },
+          });
+        });
+
+        $("#copy-button").on("click", function () {
+          const code = editor.getValue();
+          navigator.clipboard.writeText(code).then(
+            function () {
+              toastr.success("Result copied to clipboard!", "Success");
+            },
+            function (err) {
+              toastr.error("Failed to copy result", "Error");
+            }
+          );
+        });
+
+        // Show modal when download button is clicked
+        $("#download-button").on("click", function () {
+          // Check if the editor is empty
+          if (editor.getValue().trim() === "") {
+            toastr.error(
+              "The editor is empty. Please enter code before downloading"
+            );
+            return;
+          }
+
+          modal.show();
+          $("#modal-file-name").focus();
+        });
+
+        // Close modal when close button is clicked
+        closeButton.on("click", function () {
+          modal.hide();
+        });
+
+        // Close modal when clicking outside of the modal content
+        $(window).on("click", function (event) {
+          if ($(event.target).is(modal)) {
+            modal.hide();
+          }
+        });
+
+        // Handle file download when confirm button is clicked
+        confirmDownloadButton.on("click", function () {
+          handleFileDownload();
+        });
+
+        // Trigger download on Enter key press in the file name input field
+        $("#modal-file-name").on("keydown", function (event) {
+          if (event.key === "Enter") {
+            event.preventDefault(); // Prevent default Enter action
+            confirmDownloadButton.click(); // Trigger the download button click
+          }
+        });
+
+        // Function to handle file download
+        function handleFileDownload() {
+          let fileName = $("#modal-file-name").val().trim();
+
+          // Check if the file name is empty or ends with a period
+          if (fileName === "" || fileName.endsWith(".")) {
+            toastr.error("Please enter a valid file name");
+            return;
+          }
+
+          // Extract the file extension (if any)
+          const extension = fileName.split(".").pop();
+
+          // Check if the file has no extension or an invalid extension
+          if (extension === fileName) {
+            // No extension provided, so add .py
+            fileName += ".py";
+          } else if (extension !== "py") {
+            // If an invalid extension is provided, show an error
+            toastr.error(
+              "File name must not have an extension other than '.py'"
+            );
+            return;
+          }
+
+          const code = editor.getValue();
+          const blob = new Blob([code], { type: "text/x-python" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fileName;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+
+          // Reset the input in the modal (while keeping the placeholder)
+          $("#modal-file-name").val("").trigger("input");
+
+          modal.hide(); // Hide the modal after download
+        }
+
+        $("#copy-result-button").on("click", function () {
+          const result = $("#result-output").val();
+          navigator.clipboard.writeText(result).then(
+            function () {
+              toastr.success("Result copied to clipboard!", "Success");
+            },
+            function (err) {
+              toastr.error("Failed to copy result", "Error");
+            }
+          );
+        });
+
+        $("#download-result-button").on("click", function () {
+          const result = $("#result-output").val();
+          // Check if the result is empty
+          if (result === "") {
+            toastr.error(
+              "The result output is empty. Please ensure there is content to download"
+            );
+            return;
+          }
+          const blob = new Blob([result], { type: "text/plain" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "result.txt";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+        });
+      });
+    </script>
+  </body>
+</html>
